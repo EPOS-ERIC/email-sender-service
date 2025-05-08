@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="Maven: org.epos-eu.ics-c:db-api:3.1.30" type="java-imported" external-system-id="Maven">
+    <properties groupId="org.epos-eu.ics-c" artifactId="db-api" version="3.1.30" baseVersion="3.1.30" />
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/epos-eu/ics-c/db-api/3.1.30/db-api-3.1.30.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/epos-eu/ics-c/db-api/3.1.30/db-api-3.1.30-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/epos-eu/ics-c/db-api/3.1.30/db-api-3.1.30-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
