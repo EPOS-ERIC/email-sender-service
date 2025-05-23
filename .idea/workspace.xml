@@ -58,7 +58,7 @@
     "git-widget-placeholder": "refactoring",
     "junie.onboarding.icon.badge.shown": "true",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/home/valerio/Documents/opensource-github/services/email-sender-service",
+    "last_opened_file_path": "/home/valerio/Documenti/services/external-access-service",
     "nodejs_package_manager_path": "npm",
     "vue.rearranger.settings.migration": "true"
   }
@@ -95,6 +95,7 @@
       <workItem from="1746788458467" duration="48000" />
       <workItem from="1746789146814" duration="121000" />
       <workItem from="1747296183309" duration="23000" />
+      <workItem from="1747990328208" duration="46000" />
     </task>
     <servers />
   </component>
