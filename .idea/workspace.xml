@@ -4,7 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="26db1afc-7b80-4a3f-8535-ade51abb08de" name="Changes" comment="" />
+    <list default="true" id="26db1afc-7b80-4a3f-8535-ade51abb08de" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.github/workflows/release-latest.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/release-latest.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/release.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/release.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/jarRepositories.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/jarRepositories.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -126,6 +131,9 @@
       <workItem from="1749311313794" duration="613000" />
       <workItem from="1749484134350" duration="616000" />
       <workItem from="1749537843134" duration="32000" />
+      <workItem from="1749752955572" duration="842000" />
+      <workItem from="1749804114391" duration="602000" />
+      <workItem from="1750423168872" duration="10000" />
     </task>
     <servers />
   </component>
