@@ -47,35 +47,40 @@ public class ContactPointGet {
 
 		DataProduct dataProduct = null;
 		LOGGER.debug("Distribution: " + distribution);
-		for (LinkedEntity linkedEntity : distribution.getDataProduct()) {
-			DataProduct dp = dataProductAPI.retrieve(linkedEntity.getInstanceId());
-			if (dp.getStatus() == StatusType.PUBLISHED) {
-				dataProduct = dp;
-				break;
-			}
-		}
-		LOGGER.debug("DataProduct: " + dataProduct);
+        if (Objects.nonNull(distribution.getDataProduct())) {
+            for (LinkedEntity linkedEntity : distribution.getDataProduct()) {
+                DataProduct dp = dataProductAPI.retrieve(linkedEntity.getInstanceId());
+                if (dp.getStatus() == StatusType.PUBLISHED) {
+                    dataProduct = dp;
+                    break;
+                }
+            }
+            LOGGER.debug("DataProduct: " + dataProduct);
 
-		WebService webService = null;
-		for (LinkedEntity linkedEntity : distribution.getAccessService()) {
-			WebService ws = webServiceAPI.retrieve(linkedEntity.getInstanceId());
-			if (ws.getStatus() == StatusType.PUBLISHED) {
-				webService = ws;
-				break;
-			}
-		}
-		LOGGER.debug("WebService: " + webService);
+            WebService webService = null;
+            if (Objects.nonNull(distribution.getAccessService())) {
+                for (LinkedEntity linkedEntity : distribution.getAccessService()) {
+                    WebService ws = webServiceAPI.retrieve(linkedEntity.getInstanceId());
+                    if (ws.getStatus() == StatusType.PUBLISHED) {
+                        webService = ws;
+                        break;
+                    }
+                }
+                LOGGER.debug("WebService: " + webService);
 
-		JsonArray listEmails = generateEmailList(webService, dataProduct, type);
-		if (listEmails == null) {
-			LOGGER.debug("listEmails is null");
-			return response;
-		}
+                JsonArray listEmails = generateEmailList(webService, dataProduct, type);
+                if (listEmails == null) {
+                    LOGGER.debug("listEmails is null");
+                    return response;
+                }
 
-		response.add("emails", listEmails);
+                response.add("emails", listEmails);
+            }
+        }
 
-		LOGGER.info(response.toString());
-		return response;
+
+        LOGGER.info(response.toString());
+        return response;
 	}
 
 	public static JsonArray generateEmailList(WebService webService, DataProduct dataProduct, ProviderType type) {
