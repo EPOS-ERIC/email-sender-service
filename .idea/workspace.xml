@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="26db1afc-7b80-4a3f-8535-ade51abb08de" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/epos/core/ContactPointGet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/epos/core/ContactPointGet.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -22,12 +21,12 @@
     &quot;assignee&quot;: &quot;vvalerio&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/epos-eu/email-sender-service.git",
-    "accountId": "8cbc49f6-2c6a-45c4-b4f6-aaade99149ea"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/epos-eu/email-sender-service.git&quot;,
+    &quot;accountId&quot;: &quot;8cbc49f6-2c6a-45c4-b4f6-aaade99149ea&quot;
   }
-}]]></component>
+}</component>
   <component name="JpbToolWindowState">
     <option name="myId2FirstActivated">
       <map>
@@ -63,7 +62,7 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;Spring Boot.Swagger2SpringBoot.executor&quot;: &quot;Run&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;fix-contactpointnull&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;/home/valerio/Documenti/services/email-sender-service/src/main/java/io/swagger/api&quot;,
@@ -137,7 +136,8 @@
       <workItem from="1757096186019" duration="10000" />
       <workItem from="1757351345855" duration="31000" />
       <workItem from="1757401078695" duration="1579000" />
-      <workItem from="1759746475362" duration="657000" />
+      <workItem from="1759746475362" duration="1888000" />
+      <workItem from="1759813040551" duration="779000" />
     </task>
     <servers />
   </component>
