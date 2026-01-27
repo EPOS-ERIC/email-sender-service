@@ -1,15 +1,9 @@
 package io.swagger.api;
 
-import io.swagger.model.Email;
-import io.swagger.model.ProviderType;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.JsonObject;
-
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.mail.MessagingException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.epos.core.ContactPointGet;
@@ -18,16 +12,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+
+import io.swagger.model.Email;
+import io.swagger.model.ProviderType;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
-import java.util.Map;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 @jakarta.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2023-08-04T13:31:01.781679391Z[GMT]")
 @RestController
@@ -80,8 +81,34 @@ public class SenderApiController implements SenderApi{
 		return new ResponseEntity<Email>(HttpStatus.NOT_IMPLEMENTED);
 	}
 
-	private ResponseEntity<Email> redirectRequest(Map<String, Object> requestParams,Email sendEmail) {
+	public ResponseEntity<Email> sendEmailToPluginManagersPost(@Valid @RequestBody Email body) {
+		// JsonArray emails = ContactPointGet.generateEmailListForRole("pluginManager");
+		JsonArray emails = ContactPointGet.generateEmailListForGroup("plugin-managers");
+		if (emails.size() == 0) {
+			return new ResponseEntity<Email>(HttpStatus.BAD_REQUEST);
+		}
+		JsonObject response = new JsonObject();
+		response.add("emails", emails);
+		Map<String, Object> requestParams = new HashMap<String, Object>();
+		requestParams.put("email", "system@epos");
+		requestParams.put("firstName", "System");
+		requestParams.put("lastName", "");
+		try {
+			EmailSenderHandler.handle(response, body, requestParams);
+		} catch (UnsupportedEncodingException | MessagingException e) {
+			log.error("Couldn't send email to plugin managers", e);
+			return new ResponseEntity<Email>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+		log.info("Email sent to {} plugin manager contacts", emails.size());
+		try {
+			return new ResponseEntity<Email>(objectMapper.readValue("{\n  \"bodyText\" : \"bodyText\",\n  \"subject\" : \"subject\"\n}", Email.class), HttpStatus.ACCEPTED);
+		} catch (Exception e) {
+			log.error("Error creating response", e);
+			return new ResponseEntity<Email>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
 
+	private ResponseEntity<Email> redirectRequest(Map<String, Object> requestParams,Email sendEmail) {
 		JsonObject response = ContactPointGet.generate(new JsonObject(), requestParams);
 		
 			try {
