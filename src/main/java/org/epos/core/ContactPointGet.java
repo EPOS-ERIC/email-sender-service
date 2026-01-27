@@ -1,10 +1,17 @@
 package org.epos.core;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.epos.eposdatamodel.ContactPoint;
 import org.epos.eposdatamodel.DataProduct;
 import org.epos.eposdatamodel.Distribution;
+import org.epos.eposdatamodel.Group;
 import org.epos.eposdatamodel.LinkedEntity;
 import org.epos.eposdatamodel.WebService;
 import org.slf4j.Logger;
@@ -20,6 +27,7 @@ import metadataapis.DistributionAPI;
 import metadataapis.EntityNames;
 import metadataapis.WebServiceAPI;
 import model.StatusType;
+import usermanagementapis.UserGroupManagementAPI;
 
 public class ContactPointGet {
 
@@ -131,4 +139,50 @@ public class ContactPointGet {
 		return listEmails;
 	}
 
+	public static JsonArray generateEmailListForRole(String role) {
+		Set<String> emailSet = new HashSet<String>();
+		List<ContactPoint> allContacts = contactPointAPI.retrieveAll();
+		for (ContactPoint contactPoint : allContacts) {
+			if (role.equals(contactPoint.getRole())) {
+				for (String email : contactPoint.getEmail()) {
+					emailSet.add(email);
+				}
+			}
+		}
+		JsonArray listEmails = new JsonArray();
+		for (String email : emailSet) {
+			listEmails.add(email);
+		}
+		return listEmails;
+	}
+
+	public static JsonArray generateEmailListForGroup(String group) {
+		Set<String> emailSet = new HashSet<String>();
+
+		Map<String, String> groupMap = UserGroupManagementAPI.retrieveAllGroups().stream()
+			.collect(Collectors.toMap(Group::getId, Group::getName));
+
+		Optional<String> groupId = UserGroupManagementAPI.retrieveAllGroups().stream()
+			.filter(g -> g.getName().equals(group))
+			.map(Group::getId)
+			.findFirst();
+
+		if (groupId.isEmpty()) {
+			return new JsonArray();
+		}
+
+		List<ContactPoint> allContacts = contactPointAPI.retrieveAll();
+		for (ContactPoint contactPoint : allContacts) {
+			if (contactPoint.getGroups() != null && !contactPoint.getGroups().isEmpty() && contactPoint.getGroups().contains(groupId.get())) {
+				for (String email : contactPoint.getEmail()) {
+					emailSet.add(email);
+				}
+			}
+		}
+		JsonArray listEmails = new JsonArray();
+		for (String email : emailSet) {
+			listEmails.add(email);
+		}
+		return listEmails;
+	}
 }
