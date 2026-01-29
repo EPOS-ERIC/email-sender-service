@@ -144,7 +144,7 @@
 		<dependency>
 			<groupId>org.epos-eu.ics-c</groupId>
 			<artifactId>db-api</artifactId>
-			<version>4.2.12</version>
+			<version>4.2.20</version>
 		</dependency>
 
 	  <!-- https://mvnrepository.com/artifact/jakarta.mail/jakarta.mail-api -->
