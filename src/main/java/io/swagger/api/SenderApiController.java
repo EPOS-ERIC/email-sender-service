@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +22,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import io.swagger.model.Email;
+
 import io.swagger.model.ProviderType;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -28,11 +30,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 @jakarta.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2023-08-04T13:31:01.781679391Z[GMT]")
 @RestController
-public class SenderApiController implements SenderApi{
+public class SenderApiController implements SenderApi {
 
 	@org.springframework.beans.factory.annotation.Autowired
 	public SenderApiController(ObjectMapper objectMapper, HttpServletRequest request) {
@@ -46,11 +49,10 @@ public class SenderApiController implements SenderApi{
 
 	private final HttpServletRequest request;
 
-
 	public ResponseEntity<Email> sendEmailPost(
-			@NotNull @Parameter(in = ParameterIn.QUERY, description = "Id of the resource" , required=true,schema=@Schema()) @Valid @RequestParam(value = "id", required = true) String id,
-			@NotNull @Parameter(in = ParameterIn.QUERY, description = "Contact point type" , required=true,schema=@Schema()) @Valid @RequestParam(value = "contactType", required = true) ProviderType contactType, 
-			@Parameter(in = ParameterIn.DEFAULT, description = "", schema=@Schema()) @Valid @RequestBody Email body) {
+			@NotNull @Parameter(in = ParameterIn.QUERY, description = "Id of the resource", required = true, schema = @Schema()) @Valid @RequestParam(value = "id", required = true) String id,
+			@NotNull @Parameter(in = ParameterIn.QUERY, description = "Contact point type", required = true, schema = @Schema()) @Valid @RequestParam(value = "contactType", required = true) ProviderType contactType,
+			@Parameter(in = ParameterIn.DEFAULT, description = "", schema = @Schema()) @Valid @RequestBody Email body) {
 		String accept = request.getHeader("Accept");
 		String userEmail = request.getParameter("userEmail");
 		String firstName = request.getParameter("firstName");
@@ -58,7 +60,7 @@ public class SenderApiController implements SenderApi{
 		if (accept != null && accept.contains("application/json")) {
 			try {
 				final Map<String, Object> requestParameters = new HashMap<String, Object>();
-				if(StringUtils.isBlank(id) && StringUtils.isBlank(userEmail)) {
+				if (StringUtils.isBlank(id) && StringUtils.isBlank(userEmail)) {
 					return new ResponseEntity<Email>(HttpStatus.BAD_REQUEST);
 				}
 
@@ -71,7 +73,9 @@ public class SenderApiController implements SenderApi{
 
 				redirectRequest(requestParameters, body);
 
-				return new ResponseEntity<Email>(objectMapper.readValue("{\n  \"bodyText\" : \"bodyText\",\n  \"subject\" : \"subject\"\n}", Email.class), HttpStatus.ACCEPTED);
+				return new ResponseEntity<Email>(objectMapper
+						.readValue("{\n  \"bodyText\" : \"bodyText\",\n  \"subject\" : \"subject\"\n}", Email.class),
+						HttpStatus.ACCEPTED);
 			} catch (IOException e) {
 				log.error("Couldn't serialize response for content type application/json", e);
 				return new ResponseEntity<Email>(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -81,42 +85,51 @@ public class SenderApiController implements SenderApi{
 		return new ResponseEntity<Email>(HttpStatus.NOT_IMPLEMENTED);
 	}
 
-	public ResponseEntity<Email> sendEmailToPluginManagersPost(@Valid @RequestBody Email body) {
-		// JsonArray emails = ContactPointGet.generateEmailListForRole("pluginManager");
-		JsonArray emails = ContactPointGet.generateEmailListForGroup("plugin-managers");
+	public ResponseEntity<Email> sendEmailToGroupPost(@NotBlank @PathVariable String group,
+			@Valid @RequestBody Email body) {
+		if (StringUtils.isBlank(group)) {
+			return new ResponseEntity<Email>(HttpStatus.BAD_REQUEST);
+		}
+		JsonArray emails = ContactPointGet.generateEmailListForGroup(group);
 		if (emails.size() == 0) {
 			return new ResponseEntity<Email>(HttpStatus.BAD_REQUEST);
 		}
+
 		JsonObject response = new JsonObject();
 		response.add("emails", emails);
 		Map<String, Object> requestParams = new HashMap<String, Object>();
 		requestParams.put("email", "system@epos");
 		requestParams.put("firstName", "System");
 		requestParams.put("lastName", "");
+
 		try {
 			EmailSenderHandler.handle(response, body, requestParams);
 		} catch (UnsupportedEncodingException | MessagingException e) {
-			log.error("Couldn't send email to plugin managers", e);
+			log.error("Couldn't send email to group: " + group, e);
 			return new ResponseEntity<Email>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-		log.info("Email sent to {} plugin manager contacts", emails.size());
+
+		log.info("Email sent to {} contacts in group: {}", emails.size(), group);
+
 		try {
-			return new ResponseEntity<Email>(objectMapper.readValue("{\n  \"bodyText\" : \"bodyText\",\n  \"subject\" : \"subject\"\n}", Email.class), HttpStatus.ACCEPTED);
+			return new ResponseEntity<Email>(objectMapper
+					.readValue("{\n  \"bodyText\" : \"bodyText\",\n  \"subject\" : \"subject\"\n}", Email.class),
+					HttpStatus.ACCEPTED);
 		} catch (Exception e) {
 			log.error("Error creating response", e);
 			return new ResponseEntity<Email>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
 
-	private ResponseEntity<Email> redirectRequest(Map<String, Object> requestParams,Email sendEmail) {
+	private ResponseEntity<Email> redirectRequest(Map<String, Object> requestParams, Email sendEmail) {
 		JsonObject response = ContactPointGet.generate(new JsonObject(), requestParams);
-		
-			try {
-				EmailSenderHandler.handle(response,sendEmail, requestParams);
-			} catch (UnsupportedEncodingException | MessagingException e) {
-				log.error("Couldn't serialize response for content type application/json", e);
-				return new ResponseEntity<Email>(HttpStatus.INTERNAL_SERVER_ERROR);
-			}
+
+		try {
+			EmailSenderHandler.handle(response, sendEmail, requestParams);
+		} catch (UnsupportedEncodingException | MessagingException e) {
+			log.error("Couldn't serialize response for content type application/json", e);
+			return new ResponseEntity<Email>(HttpStatus.INTERNAL_SERVER_ERROR);
+		}
 
 		return new ResponseEntity<Email>(HttpStatus.ACCEPTED);
 	}

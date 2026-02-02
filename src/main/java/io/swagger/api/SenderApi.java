@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import io.swagger.model.Email;
+
 import io.swagger.model.ProviderType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,31 +30,27 @@ import jakarta.validation.constraints.NotNull;
 @Validated
 public interface SenderApi {
 
-	@Operation(summary = "Send an Email", description = "Send an Email", tags={ "Email Sender Service" })
-	@ApiResponses(value = { 
+	@Operation(summary = "Send an Email", description = "Send an Email", tags = { "Email Sender Service" })
+	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Email.class))),
 
 			@ApiResponse(responseCode = "405", description = "Invalid input") })
-	@RequestMapping(value = "/sender/send-email",
-	produces = { "application/json" }, 
-	consumes = { "application/json" }, 
-	method = RequestMethod.POST)
+	@RequestMapping(value = "/sender/send-email", produces = { "application/json" }, consumes = {
+			"application/json" }, method = RequestMethod.POST)
 	ResponseEntity<Email> sendEmailPost(
-			@NotNull @Parameter(in = ParameterIn.QUERY, description = "Id of the resource" , required=true,schema=@Schema()) @Valid @RequestParam(value = "id", required = true) String id,
-			@NotNull @Parameter(in = ParameterIn.QUERY, description = "Contact point type" , required=true,schema=@Schema()) @Valid @RequestParam(value = "contactType", required = true) ProviderType contactType, 
-			@Parameter(in = ParameterIn.DEFAULT, description = "", schema=@Schema()) @Valid @RequestBody Email body);
+			@NotNull @Parameter(in = ParameterIn.QUERY, description = "Id of the resource", required = true, schema = @Schema()) @Valid @RequestParam(value = "id", required = true) String id,
+			@NotNull @Parameter(in = ParameterIn.QUERY, description = "Contact point type", required = true, schema = @Schema()) @Valid @RequestParam(value = "contactType", required = true) ProviderType contactType,
+			@Parameter(in = ParameterIn.DEFAULT, description = "", schema = @Schema()) @Valid @RequestBody Email body);
 
-	@Operation(summary = "Send Email to Plugin Managers", description = "Send an Email to all contact points with role pluginManager", tags={ "Email Sender Service" })
+	@Operation(summary = "Send Email to Group", description = "Send an Email to all contact points belonging to the specified group", tags = {
+			"Email Sender Service" })
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "202", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Email.class))),
 
-			@ApiResponse(responseCode = "400", description = "No plugin manager contacts found") })
-	@RequestMapping(value = "/sender/send-email-plugin",
-	produces = { "application/json" },
-	consumes = { "application/json" },
-	method = RequestMethod.POST)
-	ResponseEntity<Email> sendEmailToPluginManagersPost(
-			@Parameter(in = ParameterIn.DEFAULT, description = "", schema=@Schema()) @Valid @RequestBody Email body);
-
+			@ApiResponse(responseCode = "400", description = "No contacts found for the specified group") })
+	@RequestMapping(value = "/sender/send-email-group/{group}", produces = { "application/json" }, consumes = {
+			"application/json" }, method = RequestMethod.POST)
+	ResponseEntity<Email> sendEmailToGroupPost(
+			@Parameter(in = ParameterIn.PATH, description = "The group to send emails to", required = true, schema = @Schema()) @PathVariable("group") String group,
+			@Parameter(in = ParameterIn.DEFAULT, description = "", schema = @Schema()) @Valid @RequestBody Email body);
 }
-
