@@ -24,6 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 @jakarta.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.SpringCodegen", date = "2023-08-04T13:31:01.781679391Z[GMT]")
@@ -51,6 +52,6 @@ public interface SenderApi {
 	@RequestMapping(value = "/sender/send-email-group/{group}", produces = { "application/json" }, consumes = {
 			"application/json" }, method = RequestMethod.POST)
 	ResponseEntity<Email> sendEmailToGroupPost(
-			@Parameter(in = ParameterIn.PATH, description = "The group to send emails to", required = true, schema = @Schema()) @PathVariable("group") String group,
+			@NotBlank @Parameter(in = ParameterIn.PATH, description = "The group to send emails to", required = true, schema = @Schema()) @PathVariable("group") String group,
 			@Parameter(in = ParameterIn.DEFAULT, description = "", schema = @Schema()) @Valid @RequestBody Email body);
 }
