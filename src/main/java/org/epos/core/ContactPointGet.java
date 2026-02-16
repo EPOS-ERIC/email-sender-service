@@ -178,8 +178,16 @@ public class ContactPointGet {
 		LOGGER.info("Resolved group '{}' to groupId '{}'. Looking up contact points.", group, groupId.get());
 
 		List<ContactPoint> allContacts = contactPointAPI.retrieveAll();
+		LOGGER.info("Retrieved {} contact points from metadata API", allContacts.size());
+		int matchingContactPoints = 0;
+		int contactsWithoutEmails = 0;
 		for (ContactPoint contactPoint : allContacts) {
 			if (contactPoint.getGroups() != null && !contactPoint.getGroups().isEmpty() && contactPoint.getGroups().contains(groupId.get())) {
+				matchingContactPoints++;
+				if (contactPoint.getEmail() == null || contactPoint.getEmail().isEmpty()) {
+					contactsWithoutEmails++;
+					continue;
+				}
 				for (String email : contactPoint.getEmail()) {
 					emailSet.add(email);
 				}
@@ -189,6 +197,9 @@ public class ContactPointGet {
 		for (String email : emailSet) {
 			listEmails.add(email);
 		}
+		LOGGER.info(
+				"Group '{}' (id '{}') matched {} contact points ({} without emails) and produced {} unique recipient emails",
+				group, groupId.get(), matchingContactPoints, contactsWithoutEmails, listEmails.size());
 		return listEmails;
 	}
 }
