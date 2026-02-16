@@ -158,18 +158,24 @@ public class ContactPointGet {
 
 	public static JsonArray generateEmailListForGroup(String group) {
 		Set<String> emailSet = new HashSet<String>();
+		LOGGER.info("Resolving recipient emails for group '{}'", group);
 
-		Map<String, String> groupMap = UserGroupManagementAPI.retrieveAllGroups().stream()
+		List<Group> groups = UserGroupManagementAPI.retrieveAllGroups();
+		Map<String, String> groupMap = groups.stream()
 			.collect(Collectors.toMap(Group::getId, Group::getName));
+		LOGGER.info("Retrieved {} groups from user management", groupMap.size());
 
-		Optional<String> groupId = UserGroupManagementAPI.retrieveAllGroups().stream()
+		Optional<String> groupId = groups.stream()
 			.filter(g -> g.getName().equals(group))
 			.map(Group::getId)
 			.findFirst();
 
 		if (groupId.isEmpty()) {
+			LOGGER.warn("Group '{}' not found. Available groups are: {}", group, groupMap.values());
 			return new JsonArray();
 		}
+
+		LOGGER.info("Resolved group '{}' to groupId '{}'. Looking up contact points.", group, groupId.get());
 
 		List<ContactPoint> allContacts = contactPointAPI.retrieveAll();
 		for (ContactPoint contactPoint : allContacts) {

@@ -57,10 +57,13 @@ public class SenderApiController implements SenderApi {
 		String userEmail = request.getParameter("userEmail");
 		String firstName = request.getParameter("firstName");
 		String lastName = request.getParameter("lastName");
+		log.info("Received sendEmailPost request: id='{}', contactType='{}', userEmail='{}', accept='{}'", id,
+				contactType, userEmail, accept);
 		if (accept != null && accept.contains("application/json")) {
 			try {
 				final Map<String, Object> requestParameters = new HashMap<String, Object>();
 				if (StringUtils.isBlank(id) && StringUtils.isBlank(userEmail)) {
+					log.warn("Rejecting sendEmailPost with BAD_REQUEST: both 'id' and 'userEmail' are blank");
 					return new ResponseEntity<Email>(HttpStatus.BAD_REQUEST);
 				}
 
@@ -82,16 +85,31 @@ public class SenderApiController implements SenderApi {
 			}
 		}
 
+		log.warn("Rejecting sendEmailPost with NOT_IMPLEMENTED: Accept header '{}' is not supported", accept);
 		return new ResponseEntity<Email>(HttpStatus.NOT_IMPLEMENTED);
 	}
 
 	public ResponseEntity<Email> sendEmailToGroupPost(@NotBlank @PathVariable String group,
 			@Valid @RequestBody Email body) {
-		if (StringUtils.isBlank(group)) {
+		log.info("Received sendEmailToGroupPost request: group='{}', subject='{}', bodyTextLength={}", group,
+				body != null ? body.getSubject() : null,
+				body != null && body.getBodyText() != null ? body.getBodyText().length() : 0);
+
+		String normalizedGroup = StringUtils.trimToNull(group);
+		if (normalizedGroup == null) {
+			log.warn("Rejecting sendEmailToGroupPost with BAD_REQUEST: group is blank");
 			return new ResponseEntity<Email>(HttpStatus.BAD_REQUEST);
 		}
-		JsonArray emails = ContactPointGet.generateEmailListForGroup(group);
+
+		if (!normalizedGroup.equals(group)) {
+			log.info("Normalized group path variable from '{}' to '{}'", group, normalizedGroup);
+		}
+
+		JsonArray emails = ContactPointGet.generateEmailListForGroup(normalizedGroup);
+		log.info("Resolved {} recipient emails for group '{}'", emails.size(), normalizedGroup);
 		if (emails.size() == 0) {
+			log.warn("Rejecting sendEmailToGroupPost with BAD_REQUEST: no contact emails found for group '{}'",
+					normalizedGroup);
 			return new ResponseEntity<Email>(HttpStatus.BAD_REQUEST);
 		}
 
@@ -103,20 +121,22 @@ public class SenderApiController implements SenderApi {
 		requestParams.put("lastName", "");
 
 		try {
+			log.info("Dispatching email to group '{}' with {} recipients", normalizedGroup, emails.size());
 			EmailSenderHandler.handle(response, body, requestParams);
 		} catch (UnsupportedEncodingException | MessagingException e) {
-			log.error("Couldn't send email to group: " + group, e);
+			log.error("Couldn't send email to group '{}'", normalizedGroup, e);
 			return new ResponseEntity<Email>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 
-		log.info("Email sent to {} contacts in group: {}", emails.size(), group);
+		log.info("Email sent to {} contacts in group: {}", emails.size(), normalizedGroup);
 
 		try {
+			log.info("Returning ACCEPTED for sendEmailToGroupPost, group='{}'", normalizedGroup);
 			return new ResponseEntity<Email>(objectMapper
 					.readValue("{\n  \"bodyText\" : \"bodyText\",\n  \"subject\" : \"subject\"\n}", Email.class),
 					HttpStatus.ACCEPTED);
 		} catch (Exception e) {
-			log.error("Error creating response", e);
+			log.error("Error creating response for group '{}'", normalizedGroup, e);
 			return new ResponseEntity<Email>(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
