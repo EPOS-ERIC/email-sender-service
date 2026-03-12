@@ -6,6 +6,7 @@
   <component name="ChangeListManager">
     <list default="true" id="26db1afc-7b80-4a3f-8535-ade51abb08de" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/epos/core/ContactPointGet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/epos/core/ContactPointGet.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -107,8 +108,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-jdk-30f59d01ecdd-26cb7f24e5b0-intellij.indexing.shared.core-IU-253.29346.240" />
-        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-IU-253.29346.240" />
+        <option value="bundled-jdk-30f59d01ecdd-2fc7cc6b9a17-intellij.indexing.shared.core-IU-253.31033.145" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-IU-253.31033.145" />
       </set>
     </attachedChunks>
   </component>
@@ -158,6 +159,8 @@
       <workItem from="1769683257098" duration="1661000" />
       <workItem from="1769695771771" duration="3136000" />
       <workItem from="1769712242599" duration="2469000" />
+      <workItem from="1771356042695" duration="801000" />
+      <workItem from="1773329087684" duration="1138000" />
     </task>
     <servers />
   </component>

@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import dao.EposDataModelDAO;
 import org.epos.eposdatamodel.ContactPoint;
 import org.epos.eposdatamodel.DataProduct;
 import org.epos.eposdatamodel.Distribution;
@@ -43,6 +44,8 @@ public class ContactPointGet {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ContactPointGet.class);
 
 	public static JsonObject generate(JsonObject response, Map<String, Object> requestParams) {
+
+		EposDataModelDAO.getInstance().clearAllCaches();
 
 		LOGGER.info("Requests start - JPA method");
 
@@ -92,6 +95,9 @@ public class ContactPointGet {
 	}
 
 	public static JsonArray generateEmailList(WebService webService, DataProduct dataProduct, ProviderType type) {
+
+		EposDataModelDAO.getInstance().clearAllCaches();
+
 		Set<String> emailSet = new HashSet<String>();
 		switch (type) {
 			case SERVICEPROVIDERS:
@@ -157,6 +163,9 @@ public class ContactPointGet {
 	}
 
 	public static JsonArray generateEmailListForGroup(String group) {
+
+		EposDataModelDAO.getInstance().clearAllCaches();
+
 		Set<String> emailSet = new HashSet<String>();
 		LOGGER.info("Resolving recipient emails for group '{}'", group);
 
