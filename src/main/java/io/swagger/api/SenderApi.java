@@ -43,6 +43,18 @@ public interface SenderApi {
 			@NotNull @Parameter(in = ParameterIn.QUERY, description = "Contact point type", required = true, schema = @Schema()) @Valid @RequestParam(value = "contactType", required = true) ProviderType contactType,
 			@Parameter(in = ParameterIn.DEFAULT, description = "", schema = @Schema()) @Valid @RequestBody Email body);
 
+	@Operation(summary = "Send Email to Direct Recipients", description = "Send an Email to one or more specific recipient email addresses", tags = {
+			"Email Sender Service" })
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "202", description = "successful operation", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Email.class))),
+
+			@ApiResponse(responseCode = "400", description = "Invalid input") })
+	@RequestMapping(value = "/sender/send-email-direct", produces = { "application/json" }, consumes = {
+			"application/json" }, method = RequestMethod.POST)
+	ResponseEntity<Email> sendEmailDirectPost(
+			@Parameter(in = ParameterIn.QUERY, description = "Recipient email address. Repeat the query parameter to send to multiple recipients", required = true, schema = @Schema()) @Valid @RequestParam(value = "email", required = true) String[] email,
+			@Parameter(in = ParameterIn.DEFAULT, description = "", schema = @Schema()) @Valid @RequestBody Email body);
+
 	@Operation(summary = "Send Email to Group", description = "Send an Email to all contact points belonging to the specified group", tags = {
 			"Email Sender Service" })
 	@ApiResponses(value = {

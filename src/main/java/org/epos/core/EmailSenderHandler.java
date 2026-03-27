@@ -9,7 +9,6 @@ import org.epos.api.utility.EmailUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -41,42 +40,64 @@ public class EmailSenderHandler {
 	public static Map<String, Object> handle(JsonObject payload,Email sendEmail, Map<String, Object> requestParams) throws MessagingException, UnsupportedEncodingException {
 
 		JsonArray mails = payload.get("emails").getAsJsonArray();
+		String[] recipientEmails = resolveTargetEmails(mails);
 		String from = requestParams.get("email").toString();
 		String firstName = requestParams.get("firstName").toString();
 		String lastName = requestParams.get("lastName").toString();
 
-		if(System.getenv("ENVIRONMENT_TYPE").equals("production")) {
-			String[] emails = new String[mails.size()];
-			for (int i = 0; i < mails.size(); i++) emails[i] = mails.getAsJsonArray().get(i).getAsString();
-
-			if(System.getenv("MAIL_TYPE").equals("SMTP")){
-				sendViaSMTP(emails, from, sendEmail.getSubject(), sendEmail.getBodyText(), firstName, lastName);
-			}
-			if(System.getenv("MAIL_TYPE").equals("API")){
-				try {
-					sendViaAPI(emails, from, sendEmail.getSubject(), sendEmail.getBodyText(), firstName, lastName);
-				} catch (IOException | InterruptedException e) {
-					LOGGER.error(e.getLocalizedMessage());
-				}
-			}
-		}else {
-			String[] devMails =System.getenv("DEV_EMAILS").split(";");
-			if(System.getenv("MAIL_TYPE").equals("SMTP")){
-				sendViaSMTP(devMails, from, sendEmail.getSubject(), sendEmail.getBodyText(), firstName, lastName);
-			}
-			if(System.getenv("MAIL_TYPE").equals("API")){
-				try {
-					sendViaAPI(devMails, from, sendEmail.getSubject(), sendEmail.getBodyText(), firstName, lastName);
-				} catch (IOException | InterruptedException e) {
-					LOGGER.error(e.getLocalizedMessage());
-				}
+		String messageBody = "From: "+from+"\n" + sendEmail.getBodyText();
+		if("SMTP".equals(System.getenv("MAIL_TYPE"))){
+			sendViaSMTP(recipientEmails, sendEmail.getSubject(), messageBody);
+		}
+		if("API".equals(System.getenv("MAIL_TYPE"))){
+			try {
+				sendViaAPI(recipientEmails, sendEmail.getSubject(), messageBody);
+				sendForwardViaAPI(from, sendEmail.getSubject(), forwardedMessage + sendEmail.getBodyText(), firstName, lastName);
+			} catch (IOException | InterruptedException e) {
+				LOGGER.error(e.getLocalizedMessage());
 			}
 		}
 
 		return new HashMap<String, Object>();
 	}
 
-	public static void sendViaSMTP(String[] emails, String from, String subject, String bodyText, String firstName, String lastName) {
+	public static Map<String, Object> handleDirect(String[] recipientEmails, Email sendEmail) throws MessagingException, UnsupportedEncodingException {
+
+		String[] targetEmails = resolveTargetEmails(recipientEmails);
+
+		if(!"API".equals(System.getenv("MAIL_TYPE"))) {
+			throw new MessagingException("Direct email sending requires MAIL_TYPE=API");
+		}
+
+		try {
+			sendSingleMessageViaAPI(targetEmails, sendEmail.getSubject(), sendEmail.getBodyText());
+		} catch (IOException | InterruptedException e) {
+			LOGGER.error(e.getLocalizedMessage());
+		}
+
+		return new HashMap<String, Object>();
+	}
+
+	private static String[] resolveTargetEmails(JsonArray mails) {
+		String[] emails = new String[mails.size()];
+		for (int i = 0; i < mails.size(); i++) {
+			emails[i] = mails.get(i).getAsString();
+		}
+		return resolveTargetEmails(emails);
+	}
+
+	private static String[] resolveTargetEmails(String[] requestedEmails) {
+		if (isProduction()) {
+			return requestedEmails;
+		}
+		return System.getenv("DEV_EMAILS").split(";");
+	}
+
+	private static boolean isProduction() {
+		return "production".equals(System.getenv("ENVIRONMENT_TYPE"));
+	}
+
+	public static void sendViaSMTP(String[] emails, String subject, String bodyText) {
 		Properties props = new Properties();
 		{
 			props.setProperty("mail.smtp.auth", "true");
@@ -97,44 +118,51 @@ public class EmailSenderHandler {
 			LOGGER.info("Creating a new session");
 			Session session = Session.getDefaultInstance(props, auth);
 			LOGGER.info("New session created, sending email");
-			EmailUtil.sendEmail(session, email,subject, "From: "+from+"\n" + bodyText);
+			EmailUtil.sendEmail(session, email,subject, bodyText);
 			LOGGER.info("End session");
 		}
 	}
 
-	public static void sendViaAPI(String[] emails, String from, String subject, String bodyText, String firstName, String lastName) throws IOException, InterruptedException {	
+	public static void sendViaAPI(String[] emails, String subject, String bodyText) throws IOException, InterruptedException {	
 		for(String email : emails) {
-			//String cmd = "curl -s --user '"+System.getenv("MAIL_API_KEY")+"' "+System.getenv("MAIL_API_URL")+" -F from='"+System.getenv("SENDER_NAME")+" <"+System.getenv("SENDER")+"@"+System.getenv("SENDER_DOMAIN")+">' -F to="+email+" -F subject='"+subject+"' -F text='From: "+from+"' -F text='" + bodyText+"'";
-			OkHttpClient client = new OkHttpClient();
-
-			String[] apiKey = System.getenv("MAIL_API_KEY").split(":");
-
-			String credential = Credentials.basic(apiKey[0], apiKey[1]);
-
-			RequestBody requestBody = new MultipartBody.Builder()
-					.setType(MultipartBody.FORM)
-					.addFormDataPart("from", System.getenv("SENDER_NAME")+" <"+System.getenv("SENDER")+"@"+System.getenv("SENDER_DOMAIN")+">")
-					.addFormDataPart("to", email)
-					.addFormDataPart("subject", subject)
-					.addFormDataPart("text", "From: "+from)
-					.addFormDataPart("text", bodyText)
-					.build();
-
-			Request request = new Request.Builder()
-					.url(System.getenv("MAIL_API_URL"))
-					.post(requestBody)
-					.header("Authorization", credential)
-					.build();
-
-			try (Response response = client.newCall(request).execute()) {
-				if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
-				response.body().string();
-			}
+			sendApiEmail(new String[] { email }, subject, bodyText);
 		}
-		sendForwardViaAPI(emails, from, subject, forwardedMessage+bodyText, firstName, lastName);
 	}
 
-	public static void sendForwardViaAPI(String[] emails, String from, String subject, String bodyText, String firstName, String lastName) throws IOException, InterruptedException {	
+	public static void sendSingleMessageViaAPI(String[] emails, String subject, String bodyText) throws IOException, InterruptedException {
+		sendApiEmail(emails, subject, bodyText);
+	}
+
+	private static void sendApiEmail(String[] emails, String subject, String bodyText) throws IOException, InterruptedException {
+		OkHttpClient client = new OkHttpClient();
+
+		String[] apiKey = System.getenv("MAIL_API_KEY").split(":");
+		String credential = Credentials.basic(apiKey[0], apiKey[1]);
+
+		MultipartBody.Builder requestBodyBuilder = new MultipartBody.Builder()
+				.setType(MultipartBody.FORM)
+				.addFormDataPart("from", System.getenv("SENDER_NAME")+" <"+System.getenv("SENDER")+"@"+System.getenv("SENDER_DOMAIN")+">")
+				.addFormDataPart("subject", subject)
+				.addFormDataPart("text", bodyText);
+		for (String email : emails) {
+			requestBodyBuilder.addFormDataPart("to", email);
+		}
+
+		RequestBody requestBody = requestBodyBuilder.build();
+
+		Request request = new Request.Builder()
+				.url(System.getenv("MAIL_API_URL"))
+				.post(requestBody)
+				.header("Authorization", credential)
+				.build();
+
+		try (Response response = client.newCall(request).execute()) {
+			if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+			response.body().string();
+		}
+	}
+
+	public static void sendForwardViaAPI(String from, String subject, String bodyText, String firstName, String lastName) throws IOException, InterruptedException {	
 		String dear = "Dear ";
 		if(firstName!=null) dear+=firstName+" ";
 		if(lastName!=null) dear+=lastName;

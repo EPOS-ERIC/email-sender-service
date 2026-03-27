@@ -58,40 +58,39 @@ public class ContactPointGet {
 
 		DataProduct dataProduct = null;
 		LOGGER.debug("Distribution: " + distribution);
-        if (Objects.nonNull(distribution.getDataProduct())) {
-            for (LinkedEntity linkedEntity : distribution.getDataProduct()) {
-                DataProduct dp = dataProductAPI.retrieve(linkedEntity.getInstanceId());
-                if (dp.getStatus() == StatusType.PUBLISHED) {
-                    dataProduct = dp;
-                    break;
-                }
-            }
-            LOGGER.debug("DataProduct: " + dataProduct);
+		if (Objects.nonNull(distribution.getDataProduct())) {
+			for (LinkedEntity linkedEntity : distribution.getDataProduct()) {
+				DataProduct dp = dataProductAPI.retrieve(linkedEntity.getInstanceId());
+				if (dp.getStatus() == StatusType.PUBLISHED) {
+					dataProduct = dp;
+					break;
+				}
+			}
+			LOGGER.debug("DataProduct: " + dataProduct);
 
-            WebService webService = null;
-            if (Objects.nonNull(distribution.getAccessService())) {
-                for (LinkedEntity linkedEntity : distribution.getAccessService()) {
-                    WebService ws = webServiceAPI.retrieve(linkedEntity.getInstanceId());
-                    if (ws.getStatus() == StatusType.PUBLISHED) {
-                        webService = ws;
-                        break;
-                    }
-                }
-                LOGGER.debug("WebService: " + webService);
+			WebService webService = null;
+			if (Objects.nonNull(distribution.getAccessService())) {
+				for (LinkedEntity linkedEntity : distribution.getAccessService()) {
+					WebService ws = webServiceAPI.retrieve(linkedEntity.getInstanceId());
+					if (ws.getStatus() == StatusType.PUBLISHED) {
+						webService = ws;
+						break;
+					}
+				}
+				LOGGER.debug("WebService: " + webService);
 
-                JsonArray listEmails = generateEmailList(webService, dataProduct, type);
-                if (listEmails == null) {
-                    LOGGER.debug("listEmails is null");
-                    return response;
-                }
+				JsonArray listEmails = generateEmailList(webService, dataProduct, type);
+				if (listEmails == null) {
+					LOGGER.debug("listEmails is null");
+					return response;
+				}
 
-                response.add("emails", listEmails);
-            }
-        }
+				response.add("emails", listEmails);
+			}
+		}
 
-
-        LOGGER.info(response.toString());
-        return response;
+		LOGGER.info(response.toString());
+		return response;
 	}
 
 	public static JsonArray generateEmailList(WebService webService, DataProduct dataProduct, ProviderType type) {
@@ -171,13 +170,13 @@ public class ContactPointGet {
 
 		List<Group> groups = UserGroupManagementAPI.retrieveAllGroups();
 		Map<String, String> groupMap = groups.stream()
-			.collect(Collectors.toMap(Group::getId, Group::getName));
+				.collect(Collectors.toMap(Group::getId, Group::getName));
 		LOGGER.info("Retrieved {} groups from user management", groupMap.size());
 
 		Optional<String> groupId = groups.stream()
-			.filter(g -> g.getName().equals(group))
-			.map(Group::getId)
-			.findFirst();
+				.filter(g -> g.getName().equals(group))
+				.map(Group::getId)
+				.findFirst();
 
 		if (groupId.isEmpty()) {
 			LOGGER.warn("Group '{}' not found. Available groups are: {}", group, groupMap.values());
@@ -191,7 +190,8 @@ public class ContactPointGet {
 		int matchingContactPoints = 0;
 		int contactsWithoutEmails = 0;
 		for (ContactPoint contactPoint : allContacts) {
-			if (contactPoint.getGroups() != null && !contactPoint.getGroups().isEmpty() && contactPoint.getGroups().contains(groupId.get())) {
+			if (contactPoint.getGroups() != null && !contactPoint.getGroups().isEmpty()
+					&& contactPoint.getGroups().contains(groupId.get())) {
 				matchingContactPoints++;
 				if (contactPoint.getEmail() == null || contactPoint.getEmail().isEmpty()) {
 					contactsWithoutEmails++;
